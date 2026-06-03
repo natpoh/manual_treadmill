@@ -1,0 +1,13 @@
+# Віртуальне середовище
+venv/
+__pycache__/
+*.pyc
+
+# Файли збірки PyInstaller
+build/
+dist/
+*.spec
+
+# Іде та інші налаштування
+.vscode/
+.idea/
