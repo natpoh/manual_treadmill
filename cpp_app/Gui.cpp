@@ -6,6 +6,8 @@
 #include "GamepadOutput.h"
 #include <chrono>
 #include <algorithm>
+#include <fstream>
+#include <sstream>
 
 Gui::Gui() : tracker(nullptr), reader(nullptr), gamepad(nullptr) {
     tracker = new MovementTracker();
@@ -19,6 +21,8 @@ Gui::Gui() : tracker(nullptr), reader(nullptr), gamepad(nullptr) {
 
     auto now = std::chrono::steady_clock::now();
     start_time = std::chrono::duration<double>(now.time_since_epoch()).count();
+    
+    loadConfig();
 }
 
 Gui::~Gui() {
@@ -211,6 +215,17 @@ void Gui::render() {
         threshold_release = 2;
     }
 
+    static float save_feedback_timer = 0.0f;
+    ImGui::Spacing();
+    if (ImGui::Button("Save Settings", ImVec2(-1, 30))) {
+        saveConfig();
+        save_feedback_timer = 2.0f;
+    }
+    if (save_feedback_timer > 0.0f) {
+        ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "Settings saved successfully!");
+        save_feedback_timer -= ImGui::GetIO().DeltaTime;
+    }
+
     ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
     if (!is_running) {
@@ -355,13 +370,14 @@ void Gui::render() {
         
         if (!times.empty()) {
             ImPlot::PlotLine("Analog Signal", times.data(), analog_vals.data(), times.size(), {ImPlotProp_LineColor, ImVec4(1.0f, 0.8f, 0.2f, 1.0f), ImPlotProp_LineWeight, 1.5f});
-            
-            // Draw Trigger Threshold
-            double low_x[2] = {times.front(), times.back()};
-            double low_y[2] = {static_cast<double>(sensor_center - threshold_trigger), static_cast<double>(sensor_center - threshold_trigger)};
-            std::string low_label = "Trigger Threshold (" + std::to_string(sensor_center - threshold_trigger) + ")";
-            ImPlot::PlotLine(low_label.c_str(), low_x, low_y, 2, {ImPlotProp_LineColor, ImVec4(1.0f, 0.2f, 0.2f, 1.0f), ImPlotProp_LineWeight, 2.0f});
         }
+        
+        // Draw Trigger Threshold (Always visible)
+        double low_x[2] = {current_time - 5.0, current_time};
+        double low_y[2] = {static_cast<double>(sensor_center - threshold_trigger), static_cast<double>(sensor_center - threshold_trigger)};
+        std::string low_label = "Trigger Threshold (" + std::to_string(sensor_center - threshold_trigger) + ")";
+        ImPlot::PlotLine(low_label.c_str(), low_x, low_y, 2, {ImPlotProp_LineColor, ImVec4(1.0f, 0.2f, 0.2f, 1.0f), ImPlotProp_LineWeight, 2.0f});
+        
         ImPlot::EndPlot();
     }
 
@@ -376,17 +392,59 @@ void Gui::render() {
         if (!times.empty()) {
             ImPlot::PlotLine("Pulses (SMA 1)", times.data(), speeds.data(), times.size(), {ImPlotProp_LineColor, ImVec4(0.2f, 0.6f, 1.0f, 1.0f), ImPlotProp_LineWeight, 2.0f});
             ImPlot::PlotLine("Smoothed (SMA 2)", times.data(), speeds_smoothed.data(), times.size(), {ImPlotProp_LineColor, ImVec4(0.2f, 1.0f, 0.6f, 1.0f), ImPlotProp_LineWeight, 2.0f});
-            
-            // Draw Horizontal Max Speed Target Line
-            double max_x[2] = {times.front(), times.back()};
-            double max_y[2] = {static_cast<double>(max_speed_limit), static_cast<double>(max_speed_limit)};
-            std::string max_label = "Max Speed Line (" + std::to_string(max_speed_limit) + ")";
-            ImPlot::PlotLine(max_label.c_str(), max_x, max_y, 2, {ImPlotProp_LineColor, ImVec4(1.0f, 0.2f, 0.2f, 1.0f), ImPlotProp_LineWeight, 2.0f});
         }
+        
+        // Draw Horizontal Max Speed Target Line (Always visible)
+        double max_x[2] = {current_time - 5.0, current_time};
+        double max_y[2] = {static_cast<double>(max_speed_limit), static_cast<double>(max_speed_limit)};
+        std::string max_label = "Max Speed Line (" + std::to_string(max_speed_limit) + ")";
+        ImPlot::PlotLine(max_label.c_str(), max_x, max_y, 2, {ImPlotProp_LineColor, ImVec4(1.0f, 0.2f, 0.2f, 1.0f), ImPlotProp_LineWeight, 2.0f});
+        
         ImPlot::EndPlot();
     }
     
     ImGui::EndChild();
 
     ImGui::End();
+}
+
+void Gui::saveConfig() {
+    std::ofstream f("config.txt");
+    if (f.is_open()) {
+        f << "threshold_trigger=" << threshold_trigger << "\n";
+        f << "sma_period_ms=" << sma_period_ms << "\n";
+        f << "sma2_period_ms=" << sma2_period_ms << "\n";
+        f << "max_speed_limit=" << max_speed_limit << "\n";
+        f << "selected_port_idx=" << selected_port_idx << "\n";
+        f.close();
+    }
+}
+
+void Gui::loadConfig() {
+    std::ifstream f("config.txt");
+    if (f.is_open()) {
+        std::string line;
+        while (std::getline(f, line)) {
+            std::size_t eq = line.find('=');
+            if (eq != std::string::npos) {
+                std::string key = line.substr(0, eq);
+                std::string val = line.substr(eq + 1);
+                if (key == "threshold_trigger") {
+                    threshold_trigger = std::stoi(val);
+                } else if (key == "sma_period_ms") {
+                    sma_period_ms = std::stoi(val);
+                } else if (key == "sma2_period_ms") {
+                    sma2_period_ms = std::stoi(val);
+                } else if (key == "max_speed_limit") {
+                    max_speed_limit = std::stoi(val);
+                } else if (key == "selected_port_idx") {
+                    selected_port_idx = std::stoi(val);
+                    if (selected_port_idx < 0 || selected_port_idx >= static_cast<int>(available_ports.size())) {
+                        selected_port_idx = 0;
+                    }
+                }
+            }
+        }
+        f.close();
+    }
 }

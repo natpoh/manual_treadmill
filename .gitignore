@@ -11,3 +11,8 @@ dist/
 # Іде та інші налаштування
 .vscode/
 .idea/
+
+# Local config and build artifacts
+config.txt
+cpp_app/build/
+cpp_app/config.txt

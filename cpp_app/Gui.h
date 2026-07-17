@@ -22,6 +22,8 @@ public:
 private:
     void renderImGui();
     void updateLogic();
+    void loadConfig();
+    void saveConfig();
 
     bool show_window = true;
     bool is_running = false;
