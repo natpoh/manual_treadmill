@@ -42,6 +42,13 @@ Watch the controller in action inside VRChat: **[VRChat DIY Manual VR Treadmill 
 
 ![Arduino Test Stand Setup](images/test_stend.jpg)
 
+## Download & Installation
+
+You can download the pre-compiled application directly from the **[Releases](https://github.com/natpoh/manual_treadmill/releases)** page:
+1. Go to the **Releases** section on the right side of this repository.
+2. Download the latest `VRTreadmill.exe` file.
+3. Run the executable. (Note: Make sure the gamepad driver is installed, see below).
+
 ---
 
 ## Requirements & Software Setup
