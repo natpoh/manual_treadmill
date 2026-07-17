@@ -277,6 +277,25 @@ void Gui::render() {
 
     ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
+    ImGui::Text("Virtual Gamepad Status:");
+    if (gamepad_init_success) {
+        ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "Status: Connected");
+        
+        float speed = tracker->current_speed.load();
+        ImGui::Text("Stick Y deflection: %.1f%%", speed * 100.0f);
+        ImGui::ProgressBar(speed, ImVec2(-1, 15), "");
+
+        if (use_sprint && (current_smoothed_speed >= sprint_threshold)) {
+            ImGui::Text("Active Button: %s (Pressed)", GAMEPAD_BUTTONS[sprint_button_idx].name);
+        } else {
+            ImGui::Text("Active Button: None");
+        }
+    } else {
+        ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Status: Driver Not Connected");
+    }
+
+    ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+
     if (!is_running) {
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.7f, 0.2f, 1.0f));
         if (ImGui::Button("START", ImVec2(-1, 50))) {
