@@ -29,7 +29,7 @@ static const int GAMEPAD_BUTTONS_COUNT = sizeof(GAMEPAD_BUTTONS) / sizeof(Gamepa
 Gui::Gui() : tracker(nullptr), reader(nullptr), gamepad(nullptr) {
     tracker = new MovementTracker();
     gamepad = new GamepadOutput();
-    gamepad->init();
+    gamepad_init_success = gamepad->init();
     
     available_ports = SensorReader::getAvailablePorts();
     if (available_ports.empty()) {
@@ -193,6 +193,15 @@ void Gui::render() {
     ImGui::TextDisabled("VR Treadmill Controller");
     ImGui::Separator();
     ImGui::Spacing();
+
+    if (!gamepad_init_success) {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
+        ImGui::TextWrapped("WARNING: Virtual Gamepad (ViGEmBus) failed to initialize! Make sure the ViGEmBus driver is installed on your PC.");
+        ImGui::PopStyleColor();
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+    }
 
     // Port selection
     ImGui::Text("COM Port:");

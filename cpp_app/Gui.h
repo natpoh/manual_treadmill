@@ -27,6 +27,7 @@ private:
 
     bool show_window = true;
     bool is_running = false;
+    bool gamepad_init_success = false;
 
     // HWND and D3D11 variables
     void* hwnd;
