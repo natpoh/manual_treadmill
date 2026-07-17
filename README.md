@@ -44,10 +44,12 @@ Watch the controller in action inside VRChat: **[VRChat DIY Manual VR Treadmill 
 
 ## Download & Installation
 
-You can download the pre-compiled application directly from the **[Releases](https://github.com/natpoh/manual_treadmill/releases)** page:
-1. Go to the **Releases** section on the right side of this repository.
-2. Download the latest `VRTreadmill.exe` file.
-3. Run the executable. (Note: Make sure the gamepad driver is installed, see below).
+You can download the pre-compiled application directly from this repository:
+* **[Download VRTreadmill.zip](VRTreadmill.zip)**
+
+1. Download and extract the **[VRTreadmill.zip](VRTreadmill.zip)** archive.
+2. Run the extracted `VRTreadmill.exe` executable.
+3. (Note: Make sure the virtual gamepad driver is installed, see below).
 
 ---
 
