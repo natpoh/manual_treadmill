@@ -46,7 +46,7 @@ if __name__ == "__main__":
     print("Підготовка графіка... Зачекайте.")
     
     # Ініціалізуємо трекер
-    tracker = MovementTracker(stop_timeout=1.0, max_rpm=120)
+    tracker = MovementTracker(stop_timeout=0.2, max_rpm=120)
     
     # Читач порту передає дані прямо в трекер
     reader = SensorReader(port=args.port)

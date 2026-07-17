@@ -2,7 +2,7 @@ import time
 import threading
 
 class MovementTracker:
-    def __init__(self, stop_timeout=1.0, max_rpm=120):
+    def __init__(self, stop_timeout=0.2, max_rpm=120):
         """
         :param stop_timeout: Час у секундах без замикань, після якого вважається, що зупинився.
         :param max_rpm: Кількість "ТІКів" на хвилину, яка вважається максимальною швидкістю (1.0).

@@ -3,18 +3,23 @@ import threading
 import time
 
 class SensorReader:
-    def __init__(self, port, baudrate=9600, mock_mode=False):
+    def __init__(self, port, baudrate=115200, mock_mode=False):
         self.port = port
         self.baudrate = baudrate
         self.mock_mode = mock_mode
         self.serial_conn = None
         self.running = False
         self.on_trigger_callback = None
+        self.on_analog_callback = None
         self.thread = None
 
     def set_callback(self, callback):
         """Встановлює функцію, яка буде викликатись при кожному замиканні датчика."""
         self.on_trigger_callback = callback
+
+    def set_analog_callback(self, callback):
+        """Встановлює функцію, яка буде викликатись при отриманні аналогового сигналу."""
+        self.on_analog_callback = callback
 
     def start(self):
         self.running = True
@@ -54,8 +59,25 @@ class SensorReader:
                                     self._trigger(delta_ms)
                                 except ValueError:
                                     pass
+                        elif line.startswith("ANALOG:"):
+                            parts = line.split(":")
+                            if len(parts) == 2:
+                                try:
+                                    subparts = parts[1].split(",")
+                                    val = int(subparts[0])
+                                    if self.on_analog_callback:
+                                        self.on_analog_callback(val)
+                                except ValueError:
+                                    pass
+                        elif line.isdigit():
+                            try:
+                                val = int(line)
+                                if self.on_analog_callback:
+                                    self.on_analog_callback(val)
+                            except ValueError:
+                                pass
                         else:
-                            # Виводимо все інше для розуміння, що саме шле Arduino
+                            # Виводимо все інше
                             print(f"[SensorReader RAW] Arduino каже: {line}")
             except Exception as e:
                 print(f"[SensorReader] Помилка читання: {e}")

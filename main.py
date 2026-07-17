@@ -8,7 +8,7 @@ def main():
     parser = argparse.ArgumentParser(description="VR Treadmill Controller (Gamepad Mode)")
     parser.add_argument('--port', type=str, default='COM3', help='COM порт (наприклад, COM3 або /dev/ttyUSB0)')
     parser.add_argument('--mock', action='store_true', help='Запуск в режимі симулятора датчика (без апаратного забезпечення)')
-    parser.add_argument('--timeout', type=float, default=1.0, help='Таймаут в секундах для зупинки')
+    parser.add_argument('--timeout', type=float, default=0.2, help='Таймаут в секундах для зупинки')
     parser.add_argument('--max-rpm', type=int, default=120, help='Кількість замикань на хвилину для максимальної швидкості')
     
     args = parser.parse_args()
