@@ -26,6 +26,8 @@ A reed switch works like a button: it closes when a magnet is brought close. To 
 
 *When the magnet is far from the reed switch, input A0 reads HIGH (the firmware translates this and sends `0` to the serial port). When the magnet passes by, it closes the connection to GND, so input A0 reads LOW (the firmware translates this and sends `1` to the serial port).*
 
+![Arduino Test Stand Setup](images/test_stend.jpg)
+
 ---
 
 ## 3. Firmware Installation

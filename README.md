@@ -4,6 +4,8 @@ A high-performance C++ utility with a Direct3D 11 + Dear ImGui interface designe
 
 This project translates physical walking speed (detected via magnetic reed switch sensors connected to an Arduino) into analog joystick inputs and button presses on a virtual gamepad.
 
+![VR Treadmill GUI Screenshot](images/vr_treadmill.png)
+
 ---
 
 ## Features
@@ -33,6 +35,8 @@ This project translates physical walking speed (detected via magnetic reed switc
 1. **Arduino Sensor**: Connect a magnetic reed switch to pin `A0` of your Arduino board. One contact of the switch connects to pin `A0`, the other to `GND`. Add a `10 kOhm` pull-up resistor between `A0` and `5V`.
 2. **Firmware**: Upload the code in the `arduino_sensor` folder to the board. The sensor reads values and sends them to the PC via USB Serial at **1000 Hz**.
 3. For detailed guide see [ARDUINO_SETUP.md](file:///c:/wsl/manual_treadmill/ARDUINO_SETUP.md).
+
+![Arduino Test Stand Setup](images/test_stend.jpg)
 
 ---
 
