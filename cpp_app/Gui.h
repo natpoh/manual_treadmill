@@ -44,6 +44,9 @@ private:
     int sma_period_ms = 3000;
     int sma2_period_ms = 500;
     int max_speed_limit = 50;
+    bool use_sprint = false;
+    int sprint_threshold = 70;
+    int sprint_button_idx = 0;
     
     // State
     float current_output_speed = 0.0f;

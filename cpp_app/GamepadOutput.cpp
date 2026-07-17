@@ -52,7 +52,7 @@ bool GamepadOutput::init() {
     return true;
 }
 
-void GamepadOutput::setSpeed(double speed_normalized) {
+void GamepadOutput::setSpeed(double speed_normalized, unsigned short buttons_mask) {
     speed_normalized = (std::max)(0.0, (std::min)(1.0, speed_normalized));
     current_speed = speed_normalized;
 
@@ -61,6 +61,8 @@ void GamepadOutput::setSpeed(double speed_normalized) {
 
     SHORT y_value = static_cast<SHORT>(speed_normalized * 32767.0);
     report.sThumbLY = y_value;
+
+    report.wButtons |= buttons_mask;
 
     if (pad && client) {
         vigem_target_x360_update(client, pad, report);

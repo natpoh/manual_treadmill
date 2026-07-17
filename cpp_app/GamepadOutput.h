@@ -8,7 +8,7 @@ public:
     ~GamepadOutput();
 
     bool init();
-    void setSpeed(double speed_normalized);
+    void setSpeed(double speed_normalized, unsigned short buttons_mask = 0);
     void stopMoving();
 
 private:

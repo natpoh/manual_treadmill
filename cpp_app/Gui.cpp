@@ -9,6 +9,23 @@
 #include <fstream>
 #include <sstream>
 
+struct GamepadButton {
+    const char* name;
+    unsigned short flag;
+};
+
+static const GamepadButton GAMEPAD_BUTTONS[] = {
+    {"Left Stick Click (L3)", 0x0040}, // XUSB_GAMEPAD_LEFT_THUMB
+    {"Right Stick Click (R3)", 0x0080}, // XUSB_GAMEPAD_RIGHT_THUMB
+    {"A Button", 0x1000}, // XUSB_GAMEPAD_A
+    {"B Button", 0x2000}, // XUSB_GAMEPAD_B
+    {"X Button", 0x4000}, // XUSB_GAMEPAD_X
+    {"Y Button", 0x8000}, // XUSB_GAMEPAD_Y
+    {"Left Shoulder (LB)", 0x0100}, // XUSB_GAMEPAD_LEFT_SHOULDER
+    {"Right Shoulder (RB)", 0x0200} // XUSB_GAMEPAD_RIGHT_SHOULDER
+};
+static const int GAMEPAD_BUTTONS_COUNT = sizeof(GAMEPAD_BUTTONS) / sizeof(GamepadButton);
+
 Gui::Gui() : tracker(nullptr), reader(nullptr), gamepad(nullptr) {
     tracker = new MovementTracker();
     gamepad = new GamepadOutput();
@@ -110,10 +127,17 @@ void Gui::updateLogic() {
         // Gamepad speed is 100% (1.0) forward when the smoothed speed crosses (is >=) the max_speed_limit red line, otherwise 0% (0.0).
         double final_speed = (smoothed_speed >= max_speed_limit) ? 1.0 : 0.0;
         
+        unsigned short active_buttons = 0;
+        if (use_sprint && (smoothed_speed >= sprint_threshold)) {
+            if (sprint_button_idx >= 0 && sprint_button_idx < GAMEPAD_BUTTONS_COUNT) {
+                active_buttons = GAMEPAD_BUTTONS[sprint_button_idx].flag;
+            }
+        }
+        
         tracker->current_speed.store(final_speed);
         current_output_speed = static_cast<float>(raw_speed); // Store raw count for plotting
         current_smoothed_speed = static_cast<float>(smoothed_speed); // Store smoothed count for plotting
-        gamepad->setSpeed(static_cast<float>(final_speed));
+        gamepad->setSpeed(static_cast<double>(final_speed), active_buttons);
     }
 
     // Push pending values to the graph
@@ -208,6 +232,22 @@ void Gui::render() {
     ImGui::SliderInt("SMA 1 Period (ms)", &sma_period_ms, 10, 3000);
     ImGui::SliderInt("SMA 2 Period (ms)", &sma2_period_ms, 10, 3000);
     ImGui::SliderInt("Maximum Speed", &max_speed_limit, 1, 100);
+
+    ImGui::Spacing();
+    ImGui::Checkbox("Use Sprint", &use_sprint);
+    if (use_sprint) {
+        ImGui::SliderInt("Sprint Threshold", &sprint_threshold, 1, 100);
+        if (ImGui::BeginCombo("Sprint Button", GAMEPAD_BUTTONS[sprint_button_idx].name)) {
+            for (int i = 0; i < GAMEPAD_BUTTONS_COUNT; i++) {
+                bool is_selected = (sprint_button_idx == i);
+                if (ImGui::Selectable(GAMEPAD_BUTTONS[i].name, is_selected)) {
+                    sprint_button_idx = i;
+                }
+                if (is_selected) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+    }
 
     // Compute release threshold dynamically with hysteresis
     threshold_release = threshold_trigger - 10;
@@ -385,7 +425,8 @@ void Gui::render() {
     if (ImPlot::BeginPlot("Calculated Speed (SMA)", ImVec2(-1, height_speed))) {
         ImPlot::SetupAxes(nullptr, "Pulses", ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_NoLabel, ImPlotAxisFlags_LockMin | ImPlotAxisFlags_LockMax);
         
-        double max_y_limit = static_cast<double>(max_speed_limit) * 1.30;
+        double active_max = use_sprint ? (std::max)(max_speed_limit, sprint_threshold) : max_speed_limit;
+        double max_y_limit = active_max * 1.30;
         ImPlot::SetupAxisLimits(ImAxis_X1, current_time - 5.0, current_time, ImPlotCond_Always);
         ImPlot::SetupAxisLimits(ImAxis_Y1, -max_y_limit * 0.05, max_y_limit, ImPlotCond_Always);
         
@@ -399,6 +440,14 @@ void Gui::render() {
         double max_y[2] = {static_cast<double>(max_speed_limit), static_cast<double>(max_speed_limit)};
         std::string max_label = "Max Speed Line (" + std::to_string(max_speed_limit) + ")";
         ImPlot::PlotLine(max_label.c_str(), max_x, max_y, 2, {ImPlotProp_LineColor, ImVec4(1.0f, 0.2f, 0.2f, 1.0f), ImPlotProp_LineWeight, 2.0f});
+        
+        // Draw Horizontal Sprint Threshold Line if enabled (Always visible)
+        if (use_sprint) {
+            double sprint_x[2] = {current_time - 5.0, current_time};
+            double sprint_y[2] = {static_cast<double>(sprint_threshold), static_cast<double>(sprint_threshold)};
+            std::string sprint_label = "Sprint Line (" + std::to_string(sprint_threshold) + ")";
+            ImPlot::PlotLine(sprint_label.c_str(), sprint_x, sprint_y, 2, {ImPlotProp_LineColor, ImVec4(1.0f, 0.5f, 0.0f, 1.0f), ImPlotProp_LineWeight, 2.0f}); // Orange
+        }
         
         ImPlot::EndPlot();
     }
@@ -416,6 +465,9 @@ void Gui::saveConfig() {
         f << "sma2_period_ms=" << sma2_period_ms << "\n";
         f << "max_speed_limit=" << max_speed_limit << "\n";
         f << "selected_port_idx=" << selected_port_idx << "\n";
+        f << "use_sprint=" << (use_sprint ? 1 : 0) << "\n";
+        f << "sprint_threshold=" << sprint_threshold << "\n";
+        f << "sprint_button_idx=" << sprint_button_idx << "\n";
         f.close();
     }
 }
@@ -441,6 +493,15 @@ void Gui::loadConfig() {
                     selected_port_idx = std::stoi(val);
                     if (selected_port_idx < 0 || selected_port_idx >= static_cast<int>(available_ports.size())) {
                         selected_port_idx = 0;
+                    }
+                } else if (key == "use_sprint") {
+                    use_sprint = (std::stoi(val) != 0);
+                } else if (key == "sprint_threshold") {
+                    sprint_threshold = std::stoi(val);
+                } else if (key == "sprint_button_idx") {
+                    sprint_button_idx = std::stoi(val);
+                    if (sprint_button_idx < 0 || sprint_button_idx >= GAMEPAD_BUTTONS_COUNT) {
+                        sprint_button_idx = 0;
                     }
                 }
             }
