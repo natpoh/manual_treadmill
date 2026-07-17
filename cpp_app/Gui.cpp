@@ -168,7 +168,7 @@ void Gui::updateLogic() {
         analog_vals.push_back(val);
     }
 
-    int max_points = 1500;
+    int max_points = 6000;
     while (times.size() > max_points) {
         times.erase(times.begin());
         speeds.erase(speeds.begin());
