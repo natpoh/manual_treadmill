@@ -103,10 +103,8 @@ void Gui::updateLogic() {
         }
         double smoothed_speed = sum / sma_history.size();
         
-        // Gamepad speed is calculated from the smoothed speed scaled by max_speed_limit
-        double final_speed = smoothed_speed / (max_speed_limit > 0 ? max_speed_limit : 1.0);
-        if (final_speed > 1.0) final_speed = 1.0;
-        if (final_speed < 0.0) final_speed = 0.0;
+        // Gamepad speed is 100% (1.0) forward when the smoothed speed crosses (is >=) the max_speed_limit red line, otherwise 0% (0.0).
+        double final_speed = (smoothed_speed >= max_speed_limit) ? 1.0 : 0.0;
         
         tracker->current_speed.store(final_speed);
         current_output_speed = static_cast<float>(raw_speed); // Store raw count for plotting
