@@ -103,8 +103,8 @@ void Gui::updateLogic() {
         }
         double smoothed_speed = sum / sma_history.size();
         
-        // Gamepad speed is calculated from the smoothed speed (so 100 ticks = 100% speed)
-        double final_speed = smoothed_speed / 100.0;
+        // Gamepad speed is calculated from the smoothed speed (so 50 ticks = 100% speed)
+        double final_speed = smoothed_speed / 50.0;
         if (final_speed > 1.0) final_speed = 1.0;
         if (final_speed < 0.0) final_speed = 0.0;
         
@@ -363,7 +363,7 @@ void Gui::render() {
     // Bottom Plot: Calculated Speed (SMA)
     if (ImPlot::BeginPlot("Calculated Speed (SMA)", ImVec2(-1, height_speed))) {
         ImPlot::SetupAxes("Time (s)", "Pulses", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LockMin | ImPlotAxisFlags_LockMax);
-        ImPlot::SetupAxisLimits(ImAxis_Y1, -5, 105, ImPlotCond_Always);
+        ImPlot::SetupAxisLimits(ImAxis_Y1, -2, 52, ImPlotCond_Always);
         
         if (!times.empty()) {
             ImPlot::PlotLine("Pulses (SMA 1)", times.data(), speeds.data(), times.size(), {ImPlotProp_LineColor, ImVec4(0.2f, 0.6f, 1.0f, 1.0f), ImPlotProp_LineWeight, 2.0f});
