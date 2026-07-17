@@ -22,9 +22,9 @@ A reed switch works like a button: it closes when a magnet is brought close. To 
 ### Connection Steps:
 1. Connect **one contact of the reed switch** to pin **A0** on the Arduino.
 2. Connect the **second contact of the reed switch** to **GND** (Ground) on the Arduino.
-3. Install a **10 kOhm resistor** between pin **A0** and pin **5V** (this ensures a stable high level of `1023` when the switch is open).
+3. Install a **10 kOhm resistor** between pin **A0** and pin **5V** (this ensures a stable pull-up level when the switch is open).
 
-*When the magnet is far from the reed switch, the analog input A0 will read `1023`. When the magnet passes by the reed switch, the circuit closes to ground, and the value on input A0 drops to `0`.*
+*When the magnet is far from the reed switch, input A0 reads HIGH (the firmware translates this and sends `0` to the serial port). When the magnet passes by, it closes the connection to GND, so input A0 reads LOW (the firmware translates this and sends `1` to the serial port).*
 
 ---
 
@@ -46,7 +46,7 @@ A reed switch works like a button: it closes when a magnet is brought close. To 
 Once the firmware has uploaded successfully, you can test the sensor directly in the Arduino IDE:
 1. Go to **Tools -> Serial Monitor** or press `Ctrl+Shift+M`.
 2. In the bottom-right corner of the Serial Monitor window, set the communication speed to: **115200 baud**.
-3. You will see a continuous stream of values showing `1023`.
-4. Bring the magnet close to the reed switch — the values should instantly drop to `0` (or close to zero). When the magnet is moved away, the values must immediately return to `1023`.
+3. You will see a continuous stream of values showing `0`.
+4. Bring the magnet close to the reed switch — the values should instantly switch to `1`. When the magnet is moved away, the values must immediately return to `0`.
 
 *If everything is working correctly, close the Arduino IDE (to free the COM port) and start the main application `VRTreadmill.exe`.*

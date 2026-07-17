@@ -15,8 +15,8 @@ struct GamepadButton {
 };
 
 static const GamepadButton GAMEPAD_BUTTONS[] = {
-    {"Left Stick Click (L3)", 0x0040}, // XUSB_GAMEPAD_LEFT_THUMB
-    {"Right Stick Click (R3)", 0x0080}, // XUSB_GAMEPAD_RIGHT_THUMB
+    {"Left Stick (L3)", 0x0040}, // XUSB_GAMEPAD_LEFT_THUMB
+    {"Right Stick (R3)", 0x0080}, // XUSB_GAMEPAD_RIGHT_THUMB
     {"A Button", 0x1000}, // XUSB_GAMEPAD_A
     {"B Button", 0x2000}, // XUSB_GAMEPAD_B
     {"X Button", 0x4000}, // XUSB_GAMEPAD_X
@@ -286,11 +286,19 @@ void Gui::render() {
                     if (this->sensor_mode == 0) {
                         this->last_analog_val.store(val);
 
-                        int center = this->sensor_center;
-                        int diff = std::abs(val - center);
+                        bool is_digital = (val == 0 || val == 1);
+                        bool active = false;
+                        if (is_digital) {
+                            active = (val == 1);
+                        } else {
+                            int center = this->sensor_center;
+                            int diff = std::abs(val - center);
+                            active = (diff > this->threshold_trigger);
+                        }
+
                         auto now = std::chrono::steady_clock::now();
 
-                        if (!this->is_magnet_near && diff > this->threshold_trigger) {
+                        if (!this->is_magnet_near && active) {
                             this->is_magnet_near = true;
                             
                             double now_sec = std::chrono::duration<double>(now.time_since_epoch()).count();
@@ -309,8 +317,16 @@ void Gui::render() {
                             this->last_delta_ms.store(delta_ms);
                             this->last_tick_time = now;
                         }
-                        else if (this->is_magnet_near && diff < this->threshold_release) {
-                            this->is_magnet_near = false;
+                        else if (this->is_magnet_near && !active) {
+                            if (is_digital) {
+                                this->is_magnet_near = false;
+                            } else {
+                                int center = this->sensor_center;
+                                int diff = std::abs(val - center);
+                                if (diff < this->threshold_release) {
+                                    this->is_magnet_near = false;
+                                }
+                            }
                         }
                     } else {
                         // Pulse Counter mode
@@ -406,17 +422,23 @@ void Gui::render() {
     if (ImPlot::BeginPlot("Sensor Analog Signal", ImVec2(-1, height_analog))) {
         ImPlot::SetupAxes(nullptr, "Raw Analog Value", ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_NoLabel, ImPlotAxisFlags_LockMin | ImPlotAxisFlags_LockMax);
         ImPlot::SetupAxisLimits(ImAxis_X1, current_time - 5.0, current_time, ImPlotCond_Always);
-        ImPlot::SetupAxisLimits(ImAxis_Y1, -5, 1050, ImPlotCond_Always);
+        
+        bool is_dig = (last_analog_val.load() <= 1);
+        double y_min = is_dig ? -0.1 : -5.0;
+        double y_max = is_dig ? 1.1 : 1050.0;
+        ImPlot::SetupAxisLimits(ImAxis_Y1, y_min, y_max, ImPlotCond_Always);
         
         if (!times.empty()) {
             ImPlot::PlotLine("Analog Signal", times.data(), analog_vals.data(), times.size(), {ImPlotProp_LineColor, ImVec4(1.0f, 0.8f, 0.2f, 1.0f), ImPlotProp_LineWeight, 1.5f});
         }
         
-        // Draw Trigger Threshold (Always visible)
-        double low_x[2] = {current_time - 5.0, current_time};
-        double low_y[2] = {static_cast<double>(sensor_center - threshold_trigger), static_cast<double>(sensor_center - threshold_trigger)};
-        std::string low_label = "Trigger Threshold (" + std::to_string(sensor_center - threshold_trigger) + ")";
-        ImPlot::PlotLine(low_label.c_str(), low_x, low_y, 2, {ImPlotProp_LineColor, ImVec4(1.0f, 0.2f, 0.2f, 1.0f), ImPlotProp_LineWeight, 2.0f});
+        // Draw Trigger Threshold only in analog mode
+        if (!is_dig) {
+            double low_x[2] = {current_time - 5.0, current_time};
+            double low_y[2] = {static_cast<double>(sensor_center - threshold_trigger), static_cast<double>(sensor_center - threshold_trigger)};
+            std::string low_label = "Trigger Threshold (" + std::to_string(sensor_center - threshold_trigger) + ")";
+            ImPlot::PlotLine(low_label.c_str(), low_x, low_y, 2, {ImPlotProp_LineColor, ImVec4(1.0f, 0.2f, 0.2f, 1.0f), ImPlotProp_LineWeight, 2.0f});
+        }
         
         ImPlot::EndPlot();
     }
