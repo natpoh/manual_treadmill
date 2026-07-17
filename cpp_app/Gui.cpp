@@ -142,7 +142,7 @@ void Gui::updateLogic() {
         analog_vals.push_back(val);
     }
 
-    int max_points = 300;
+    int max_points = 1500;
     while (times.size() > max_points) {
         times.erase(times.begin());
         speeds.erase(speeds.begin());
@@ -336,6 +336,11 @@ void Gui::render() {
 
     ImGui::SameLine();
 
+    double current_time = 0.0;
+    if (is_running) {
+        current_time = std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count() - start_time;
+    }
+
     // Right Panel - Graphs
     ImGui::BeginChild("RightPanel", ImVec2(0, 0), true);
     
@@ -346,7 +351,8 @@ void Gui::render() {
 
     // Top Plot: Sensor Analog Signal
     if (ImPlot::BeginPlot("Sensor Analog Signal", ImVec2(-1, height_analog))) {
-        ImPlot::SetupAxes("Time (s)", "Raw Analog Value", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LockMin | ImPlotAxisFlags_LockMax);
+        ImPlot::SetupAxes(nullptr, "Raw Analog Value", ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_NoLabel, ImPlotAxisFlags_LockMin | ImPlotAxisFlags_LockMax);
+        ImPlot::SetupAxisLimits(ImAxis_X1, current_time - 5.0, current_time, ImPlotCond_Always);
         ImPlot::SetupAxisLimits(ImAxis_Y1, -5, 1050, ImPlotCond_Always);
         
         if (!times.empty()) {
@@ -363,9 +369,10 @@ void Gui::render() {
 
     // Bottom Plot: Calculated Speed (SMA)
     if (ImPlot::BeginPlot("Calculated Speed (SMA)", ImVec2(-1, height_speed))) {
-        ImPlot::SetupAxes("Time (s)", "Pulses", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LockMin | ImPlotAxisFlags_LockMax);
+        ImPlot::SetupAxes(nullptr, "Pulses", ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_NoLabel, ImPlotAxisFlags_LockMin | ImPlotAxisFlags_LockMax);
         
         double max_y_limit = static_cast<double>(max_speed_limit) * 1.30;
+        ImPlot::SetupAxisLimits(ImAxis_X1, current_time - 5.0, current_time, ImPlotCond_Always);
         ImPlot::SetupAxisLimits(ImAxis_Y1, -max_y_limit * 0.05, max_y_limit, ImPlotCond_Always);
         
         if (!times.empty()) {
