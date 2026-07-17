@@ -41,6 +41,7 @@ private:
     int sensor_mode = 0; // 0 = Raw, 1 = Pulse Counter
     int sma_period_ms = 3000;
     int sma2_period_ms = 500;
+    int max_speed_limit = 50;
     
     // State
     float current_output_speed = 0.0f;

@@ -103,8 +103,8 @@ void Gui::updateLogic() {
         }
         double smoothed_speed = sum / sma_history.size();
         
-        // Gamepad speed is calculated from the smoothed speed (so 50 ticks = 100% speed)
-        double final_speed = smoothed_speed / 50.0;
+        // Gamepad speed is calculated from the smoothed speed scaled by max_speed_limit
+        double final_speed = smoothed_speed / (max_speed_limit > 0 ? max_speed_limit : 1.0);
         if (final_speed > 1.0) final_speed = 1.0;
         if (final_speed < 0.0) final_speed = 0.0;
         
@@ -205,6 +205,7 @@ void Gui::render() {
     ImGui::SliderInt("Trigger Threshold", &threshold_trigger, 5, 1000);
     ImGui::SliderInt("SMA 1 Period (ms)", &sma_period_ms, 10, 3000);
     ImGui::SliderInt("SMA 2 Period (ms)", &sma2_period_ms, 10, 3000);
+    ImGui::SliderInt("Maximum Speed", &max_speed_limit, 1, 100);
 
     // Compute release threshold dynamically with hysteresis
     threshold_release = threshold_trigger - 10;
@@ -363,11 +364,19 @@ void Gui::render() {
     // Bottom Plot: Calculated Speed (SMA)
     if (ImPlot::BeginPlot("Calculated Speed (SMA)", ImVec2(-1, height_speed))) {
         ImPlot::SetupAxes("Time (s)", "Pulses", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LockMin | ImPlotAxisFlags_LockMax);
-        ImPlot::SetupAxisLimits(ImAxis_Y1, -2, 52, ImPlotCond_Always);
+        
+        double max_y_limit = static_cast<double>(max_speed_limit) * 1.30;
+        ImPlot::SetupAxisLimits(ImAxis_Y1, -max_y_limit * 0.05, max_y_limit, ImPlotCond_Always);
         
         if (!times.empty()) {
             ImPlot::PlotLine("Pulses (SMA 1)", times.data(), speeds.data(), times.size(), {ImPlotProp_LineColor, ImVec4(0.2f, 0.6f, 1.0f, 1.0f), ImPlotProp_LineWeight, 2.0f});
             ImPlot::PlotLine("Smoothed (SMA 2)", times.data(), speeds_smoothed.data(), times.size(), {ImPlotProp_LineColor, ImVec4(0.2f, 1.0f, 0.6f, 1.0f), ImPlotProp_LineWeight, 2.0f});
+            
+            // Draw Horizontal Max Speed Target Line
+            double max_x[2] = {times.front(), times.back()};
+            double max_y[2] = {static_cast<double>(max_speed_limit), static_cast<double>(max_speed_limit)};
+            std::string max_label = "Max Speed Line (" + std::to_string(max_speed_limit) + ")";
+            ImPlot::PlotLine(max_label.c_str(), max_x, max_y, 2, {ImPlotProp_LineColor, ImVec4(1.0f, 0.2f, 0.2f, 1.0f), ImPlotProp_LineWeight, 2.0f});
         }
         ImPlot::EndPlot();
     }
