@@ -1,52 +1,52 @@
-# Инструкция по сборке и подключению датчика Arduino
+# Arduino Sensor Assembly & Connection Manual
 
-Этот документ содержит руководство по сборке аппаратной части сенсора для механической беговой дорожки на базе платы Arduino и подключению её к компьютеру.
-
----
-
-## 1. Необходимые компоненты
-
-1. **Плата Arduino**: подойдет практически любая модель (Arduino Uno, Nano, Pro Micro, Mega).
-2. **Датчик**: Геркон (магнитный контакт / reed switch).
-3. **Резистор**: сопротивлением **10 кОм** (для подтяжки сигнала).
-4. **Магнит**: неодимовый магнит, который будет крепиться на колесо или вал беговой дорожки.
-5. **USB-кабель** для подключения платы к компьютеру.
-6. Соединительные провода.
+This document provides guidelines for assembling the hardware sensor part of the manual VR treadmill using an Arduino board and connecting it to a computer.
 
 ---
 
-## 2. Схема подключения геркона к Arduino
+## 1. Required Components
 
-Геркон работает как кнопка: замыкается при поднесении магнита. Чтобы сигнал не «шумел» (не висел в воздухе) в разомкнутом состоянии, мы используем схему внешней подтяжки (Pull-Up) к линии питания 5 В через резистор.
-
-### Шаги подключения:
-1. Подключите **один контакт геркона** к пину **A0** на плате Arduino.
-2. Подключите **второй контакт геркона** к пину **GND** (Земля) на плате Arduino.
-3. Установите **резистор 10 кОм** между пином **A0** и пином **5V** (это обеспечит постоянный высокий уровень `1023` при разомкнутом герконе).
-
-*Когда магнит далеко от геркона, на аналоговом входе A0 будет считываться значение `1023`. Когда магнит проходит мимо геркона, цепь замыкается на землю, и значение на входе A0 падает до `0`.*
+1. **Arduino Board**: Almost any model will work (Arduino Uno, Nano, Pro Micro, Mega).
+2. **Sensor**: Magnetic Reed Switch.
+3. **Resistor**: **10 kOhm** resistance (for signal pull-up).
+4. **Magnet**: Neodymium magnet, to be attached to the wheel or shaft of the treadmill.
+5. **USB Cable** to connect the board to the PC.
+6. Connecting wires.
 
 ---
 
-## 3. Установка прошивки
+## 2. Reed Switch Wiring Diagram
 
-1. Скачайте и установите бесплатную среду разработки **[Arduino IDE](https://www.arduino.cc/en/software)**.
-2. Подключите плату Arduino к компьютеру через USB-кабель. Windows автоматически установит необходимые драйверы COM-порта.
-3. Откройте Arduino IDE и загрузите файл прошивки:
-   * Файл прошивки находится по пути: `arduino_sensor/arduino_sensor.ino`
-4. В верхнем меню Arduino IDE выберите вашу плату и COM-порт:
-   * **Инструменты -> Плата (Board)** -> Выберите вашу модель (например, *Arduino Nano*).
-   * **Инструменты -> Порт (Port)** -> Выберите COM-порт вашей платы (например, *COM3*).
-5. Нажмите кнопку **Загрузка (Upload)** (иконка стрелки вправо на верхней панели) и дождитесь сообщения *«Вгружено» (Done uploading)* внизу экрана.
+A reed switch works like a button: it closes when a magnet is brought close. To prevent signal noise when the switch is open, we use an external pull-up resistor configuration to the 5V power line.
+
+### Connection Steps:
+1. Connect **one contact of the reed switch** to pin **A0** on the Arduino.
+2. Connect the **second contact of the reed switch** to **GND** (Ground) on the Arduino.
+3. Install a **10 kOhm resistor** between pin **A0** and pin **5V** (this ensures a stable high level of `1023` when the switch is open).
+
+*When the magnet is far from the reed switch, the analog input A0 will read `1023`. When the magnet passes by the reed switch, the circuit closes to ground, and the value on input A0 drops to `0`.*
 
 ---
 
-## 4. Проверка работы
+## 3. Firmware Installation
 
-После успешной загрузки прошивки вы можете проверить датчик прямо в Arduino IDE:
-1. Перейдите в **Инструменты -> Монитор порта (Serial Monitor)** или нажмите сочетание клавиш `Ctrl+Shift+M`.
-2. В правом нижнем углу открывшегося окна установите скорость порта: **115200 бод** (115200 baud).
-3. Вы увидите непрерывный поток чисел со значением `1023`.
-4. Поднесите магнит к геркону — значения в реальном времени должны смениться на `0` (или близкие к нулю показатели). При отдалении магнита значения должны мгновенно вернуться к `1023`.
+1. Download and install the free **[Arduino IDE](https://www.arduino.cc/en/software)**.
+2. Connect the Arduino board to the PC using a USB cable. Windows will automatically install the necessary COM port drivers.
+3. Open Arduino IDE and load the firmware:
+   * The firmware is located at: `arduino_sensor/arduino_sensor.ino`
+4. In the top menu of Arduino IDE, select your board model and COM port:
+   * **Tools -> Board** -> Select your model (e.g. *Arduino Nano*).
+   * **Tools -> Port** -> Select the COM port assigned to your board (e.g. *COM3*).
+5. Click the **Upload** button (the right arrow icon on the top panel) and wait for the *“Done uploading”* message at the bottom of the screen.
 
-*Если всё работает, закройте Arduino IDE (чтобы освободить COM-порт) и запускайте основное приложение `VRTreadmill.exe`.*
+---
+
+## 4. Operational Check
+
+Once the firmware has uploaded successfully, you can test the sensor directly in the Arduino IDE:
+1. Go to **Tools -> Serial Monitor** or press `Ctrl+Shift+M`.
+2. In the bottom-right corner of the Serial Monitor window, set the communication speed to: **115200 baud**.
+3. You will see a continuous stream of values showing `1023`.
+4. Bring the magnet close to the reed switch — the values should instantly drop to `0` (or close to zero). When the magnet is moved away, the values must immediately return to `1023`.
+
+*If everything is working correctly, close the Arduino IDE (to free the COM port) and start the main application `VRTreadmill.exe`.*
