@@ -6,6 +6,10 @@ This project translates physical walking speed (detected via magnetic reed switc
 
 ![VR Treadmill GUI Screenshot](images/vr_treadmill.png)
 
+## Demo Video
+
+Watch the controller in action inside VRChat: **[VRChat DIY Manual VR Treadmill Demo (YouTube)](https://www.youtube.com/watch?v=ba-zsTXx3EM)**
+
 ---
 
 ## Features
