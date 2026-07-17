@@ -81,14 +81,36 @@ void Gui::updateLogic() {
             }
         }
         
-        // Speed is exactly active_ticks (on the 0-100 scale)
-        // Gamepad speed is active_ticks / 100.0 (so 100 ticks = 100% speed)
-        double final_speed = static_cast<double>(active_ticks) / 100.0;
+        double raw_speed = static_cast<double>(active_ticks);
+        
+        // Store raw speed to the SMA 2 history buffer to compute the second SMA
+        sma_history.push_back(raw_speed);
+        
+        int required_size = sma2_period_ms / 10;
+        if (required_size < 1) required_size = 1;
+        
+        while (sma_history.size() > required_size) {
+            sma_history.erase(sma_history.begin());
+        }
+        while (sma_history.size() < required_size) {
+            sma_history.push_back(raw_speed); // fill if too small
+        }
+        
+        // Calculate SMA 2 average
+        double sum = 0.0;
+        for (double v : sma_history) {
+            sum += v;
+        }
+        double smoothed_speed = sum / sma_history.size();
+        
+        // Gamepad speed is calculated from the smoothed speed (so 100 ticks = 100% speed)
+        double final_speed = smoothed_speed / 100.0;
         if (final_speed > 1.0) final_speed = 1.0;
         if (final_speed < 0.0) final_speed = 0.0;
         
         tracker->current_speed.store(final_speed);
-        current_output_speed = static_cast<float>(active_ticks); // Store raw count for plotting
+        current_output_speed = static_cast<float>(raw_speed); // Store raw count for plotting
+        current_smoothed_speed = static_cast<float>(smoothed_speed); // Store smoothed count for plotting
         gamepad->setSpeed(static_cast<float>(final_speed));
     }
 
@@ -100,7 +122,8 @@ void Gui::updateLogic() {
         for (int i = 0; i < count; i++) {
             double t = frame_start_time + (current_time - frame_start_time) * (i + 1) / count;
             times.push_back(static_cast<float>(t));
-            speeds.push_back(current_output_speed); // Plots the 0-200 value
+            speeds.push_back(current_output_speed);
+            speeds_smoothed.push_back(current_smoothed_speed);
             
             float val = static_cast<float>(current_pending[i]);
             analog_vals.push_back(val);
@@ -108,6 +131,7 @@ void Gui::updateLogic() {
     } else {
         times.push_back(static_cast<float>(current_time));
         speeds.push_back(current_output_speed);
+        speeds_smoothed.push_back(current_smoothed_speed);
         
         float val = 0.0f;
         if (sensor_mode == 0) {
@@ -122,6 +146,7 @@ void Gui::updateLogic() {
     while (times.size() > max_points) {
         times.erase(times.begin());
         speeds.erase(speeds.begin());
+        speeds_smoothed.erase(speeds_smoothed.begin());
         analog_vals.erase(analog_vals.begin());
     }
 }
@@ -178,7 +203,8 @@ void Gui::render() {
 
     // Sliders
     ImGui::SliderInt("Trigger Threshold", &threshold_trigger, 5, 1000);
-    ImGui::SliderInt("SMA Period (ms)", &sma_period_ms, 10, 3000);
+    ImGui::SliderInt("SMA 1 Period (ms)", &sma_period_ms, 10, 3000);
+    ImGui::SliderInt("SMA 2 Period (ms)", &sma2_period_ms, 10, 3000);
 
     // Compute release threshold dynamically with hysteresis
     threshold_release = threshold_trigger - 10;
@@ -269,6 +295,7 @@ void Gui::render() {
                     // Reset graph
                     times.clear();
                     speeds.clear();
+                    speeds_smoothed.clear();
                     analog_vals.clear();
                     {
                         std::lock_guard<std::mutex> lock(plot_mutex);
@@ -299,6 +326,7 @@ void Gui::render() {
             reader = nullptr;
             gamepad->stopMoving();
             current_output_speed = 0.0f;
+            current_smoothed_speed = 0.0f;
         }
         ImGui::PopStyleColor();
     }
@@ -338,8 +366,8 @@ void Gui::render() {
         ImPlot::SetupAxisLimits(ImAxis_Y1, -5, 105, ImPlotCond_Always);
         
         if (!times.empty()) {
-            ImPlot::PlotLine("Pulses", times.data(), speeds.data(), times.size(), {ImPlotProp_LineColor, ImVec4(0.2f, 0.6f, 1.0f, 1.0f), ImPlotProp_LineWeight, 2.0f});
-            ImPlot::PlotShaded("Pulses", times.data(), speeds.data(), times.size(), -INFINITY, {ImPlotProp_FillColor, ImVec4(0.2f, 0.6f, 1.0f, 0.3f)});
+            ImPlot::PlotLine("Pulses (SMA 1)", times.data(), speeds.data(), times.size(), {ImPlotProp_LineColor, ImVec4(0.2f, 0.6f, 1.0f, 1.0f), ImPlotProp_LineWeight, 2.0f});
+            ImPlot::PlotLine("Smoothed (SMA 2)", times.data(), speeds_smoothed.data(), times.size(), {ImPlotProp_LineColor, ImVec4(0.2f, 1.0f, 0.6f, 1.0f), ImPlotProp_LineWeight, 2.0f});
         }
         ImPlot::EndPlot();
     }

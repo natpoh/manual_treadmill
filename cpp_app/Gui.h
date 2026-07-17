@@ -40,9 +40,11 @@ private:
     int sensor_center = 1023;
     int sensor_mode = 0; // 0 = Raw, 1 = Pulse Counter
     int sma_period_ms = 3000;
+    int sma2_period_ms = 500;
     
     // State
     float current_output_speed = 0.0f;
+    float current_smoothed_speed = 0.0f;
     double start_time;
     double last_update_time = 0.0;
     double last_tick_time_sec = 0.0;
@@ -59,6 +61,7 @@ private:
     // Graph data
     std::vector<float> times;
     std::vector<float> speeds;
+    std::vector<float> speeds_smoothed;
     std::vector<float> analog_vals;
     std::vector<int> pending_analog_vals;
     std::mutex plot_mutex;
