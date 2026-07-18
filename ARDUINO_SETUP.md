@@ -7,17 +7,17 @@ This document provides guidelines for assembling the hardware sensor part of the
 ## 1. Required Components
 
 1. **Arduino Board**: Almost any model will work (Arduino Uno, Nano, Pro Micro, Mega).
-2. **Sensor**: Magnetic Reed Switch.
-3. **Resistor**: **10 kOhm** resistance (for signal pull-up).
+2. **Sensor**: Magnetic Reed Switch OR a Digital Unipolar Hall Effect Sensor (e.g. A3144 or KY-003 module).
+3. **Resistor**: **10 kOhm** resistance (for signal pull-up, required for standard reed switch or bare Hall sensor chips).
 4. **Magnet**: Neodymium magnet, to be attached to the wheel or shaft of the treadmill.
 5. **USB Cable** to connect the board to the PC.
 6. Connecting wires.
 
 ---
 
-## 2. Reed Switch Wiring Diagram
+## 2. Wiring Diagrams (Reed Switch or Hall Effect Sensor)
 
-A reed switch works like a button: it closes when a magnet is brought close. To prevent signal noise when the switch is open, we use a pull-up configuration to the 5V power line.
+Both sensors work like a switch: they pull the signal down to GND when a magnet is brought close. To prevent signal noise when the switch is open, we use a pull-up configuration to the 5V power line.
 
 ### Option A: Standard Reed Switch with External Resistor
 1. Connect **one contact of the reed switch** to pin **A0** on the Arduino.
@@ -32,7 +32,27 @@ If you are using a pre-assembled reed switch sensor module, it already has the r
 
 ![Reed Switch Module Connection](images/conect_2.png)
 
-*When the magnet is far from the reed switch, input A0 reads HIGH (the firmware translates this and sends `0` to the serial port). When the magnet passes by, it closes the connection to GND, so input A0 reads LOW (the firmware translates this and sends `1` to the serial port).*
+### Option C: Digital Hall Effect Sensor (KY-003 module or A3144 chip)
+A unipolar digital Hall sensor acts as a solid-state replacement for a reed switch. It registers magnetic fields without mechanical contact and works seamlessly with the same firmware.
+
+If you are using a **KY-003 module**:
+- **`S` (Signal)** to pin **A0** on the Arduino.
+- **`-` (Ground)** to **GND** on the Arduino.
+- **Middle pin (VCC / +)** to **5V** on the Arduino.
+
+If you are using a **bare A3144 chip** (looking at the front face with the text and chamfered edges):
+1. Connect the left pin (**VCC**) to **5V**.
+2. Connect the middle pin (**GND**) to **GND**.
+3. Connect the right pin (**OUT**) to pin **A0** on the Arduino.
+4. Install a **10 kOhm pull-up resistor** between pin **A0** (OUT) and **5V**.
+
+> [!NOTE]
+> **Magnet Polarity:** Hall sensors are sensitive to magnet polarity (usually triggering on the South pole). If the sensor does not trigger when the magnet passes by, flip the magnet 180 degrees.
+
+> [!WARNING]
+> **Avoid Latching Sensors:** Do not use latching/bipolar Hall sensors (like US1881), as they require an opposite magnetic pole to turn off, which will not work with a single magnet.
+
+*When the magnet is far from the sensor, input A0 reads HIGH (the firmware translates this and sends `0` to the serial port). When the magnet passes by, it pulls the pin to GND, so input A0 reads LOW (the firmware translates this and sends `1` to the serial port).*
 
 ![Arduino Test Stand Setup](images/test_stend.jpg)
 

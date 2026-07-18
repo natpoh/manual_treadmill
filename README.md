@@ -2,7 +2,7 @@
 
 A high-performance C++ utility with a Direct3D 11 + Dear ImGui interface designed to read serial data from a VR manual treadmill sensor and emulate virtual Xbox 360 controller inputs.
 
-This project translates physical walking speed (detected via magnetic reed switch sensors connected to an Arduino) into analog joystick inputs and button presses on a virtual gamepad.
+This project translates physical walking speed (detected via magnetic reed switch or digital Hall effect sensors connected to an Arduino) into analog joystick inputs and button presses on a virtual gamepad.
 
 ![VR Treadmill GUI Screenshot](images/vr_treadmill.png)
 
@@ -36,8 +36,10 @@ Watch the controller in action inside VRChat: **[VRChat DIY Manual VR Treadmill 
 
 ## Hardware Setup
 
-1. **Arduino Sensor**: Connect a magnetic reed switch to pin `A0` of your Arduino board. One contact of the switch connects to pin `A0`, the other to `GND`. Add a `10 kOhm` pull-up resistor between `A0` and `5V`. Alternatively, use a reed switch module (with the `S` pin connected to `A0`, `-` to `GND`, and the middle pin to `5V`).
-2. **Firmware**: Upload the code in the `arduino_sensor` folder to the board. The sensor reads values and sends them to the PC via USB Serial at **1000 Hz**.
+1. **Arduino Sensor**: Connect a magnetic reed switch or a digital unipolar Hall effect sensor (e.g., A3144 or KY-003 module) to pin `A0` of your Arduino board.
+   - *Reed switch*: One contact connects to pin `A0`, the other to `GND`. Add a `10 kOhm` pull-up resistor between `A0` and `5V` (or use a module with built-in resistor).
+   - *Hall effect sensor*: Connect `VCC` to `5V`, `GND` to `GND`, and `Signal/OUT` to pin `A0`. If using a bare chip, add a `10 kOhm` pull-up resistor between the output pin and `5V`.
+2. **Firmware**: Upload the code in the `arduino_sensor` folder to the board. The sensor reads values and sends them to the PC via USB Serial at **1000 Hz** (no firmware changes are needed when switching between a reed switch and a digital unipolar Hall sensor).
 3. For detailed guide see [ARDUINO_SETUP.md](file:///c:/wsl/manual_treadmill/ARDUINO_SETUP.md).
 
 ![Reed Switch Module Connection](images/conect_2.png)
