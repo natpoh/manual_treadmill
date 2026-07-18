@@ -36,10 +36,11 @@ Watch the controller in action inside VRChat: **[VRChat DIY Manual VR Treadmill 
 
 ## Hardware Setup
 
-1. **Arduino Sensor**: Connect a magnetic reed switch to pin `A0` of your Arduino board. One contact of the switch connects to pin `A0`, the other to `GND`. Add a `10 kOhm` pull-up resistor between `A0` and `5V`.
+1. **Arduino Sensor**: Connect a magnetic reed switch to pin `A0` of your Arduino board. One contact of the switch connects to pin `A0`, the other to `GND`. Add a `10 kOhm` pull-up resistor between `A0` and `5V`. Alternatively, use a reed switch module (with the `S` pin connected to `A0`, `-` to `GND`, and the middle pin to `5V`).
 2. **Firmware**: Upload the code in the `arduino_sensor` folder to the board. The sensor reads values and sends them to the PC via USB Serial at **1000 Hz**.
 3. For detailed guide see [ARDUINO_SETUP.md](file:///c:/wsl/manual_treadmill/ARDUINO_SETUP.md).
 
+![Reed Switch Module Connection](images/conect_2.png)
 ![Arduino Test Stand Setup](images/test_stend.jpg)
 
 ## Download & Installation

@@ -17,12 +17,20 @@ This document provides guidelines for assembling the hardware sensor part of the
 
 ## 2. Reed Switch Wiring Diagram
 
-A reed switch works like a button: it closes when a magnet is brought close. To prevent signal noise when the switch is open, we use an external pull-up resistor configuration to the 5V power line.
+A reed switch works like a button: it closes when a magnet is brought close. To prevent signal noise when the switch is open, we use a pull-up configuration to the 5V power line.
 
-### Connection Steps:
+### Option A: Standard Reed Switch with External Resistor
 1. Connect **one contact of the reed switch** to pin **A0** on the Arduino.
 2. Connect the **second contact of the reed switch** to **GND** (Ground) on the Arduino.
 3. Install a **10 kOhm resistor** between pin **A0** and pin **5V** (this ensures a stable pull-up level when the switch is open).
+
+### Option B: Reed Switch Module (KY-025 or similar)
+If you are using a pre-assembled reed switch sensor module, it already has the required resistor built-in. Connect it as follows:
+- **`S` (Signal)** to pin **A0** on the Arduino.
+- **`-` (Ground)** to **GND** on the Arduino.
+- **Middle pin (VCC)** to **5V** on the Arduino.
+
+![Reed Switch Module Connection](images/conect_2.png)
 
 *When the magnet is far from the reed switch, input A0 reads HIGH (the firmware translates this and sends `0` to the serial port). When the magnet passes by, it closes the connection to GND, so input A0 reads LOW (the firmware translates this and sends `1` to the serial port).*
 
