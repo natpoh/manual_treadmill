@@ -15,4 +15,5 @@ private:
     PVIGEM_CLIENT client;
     PVIGEM_TARGET pad;
     double current_speed;
+    bool target_added;
 };

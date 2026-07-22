@@ -4,6 +4,7 @@
 #include "SensorReader.h"
 #include "MovementTracker.h"
 #include "GamepadOutput.h"
+#include "Logger.h"
 #include <chrono>
 #include <algorithm>
 #include <fstream>
@@ -27,10 +28,14 @@ static const GamepadButton GAMEPAD_BUTTONS[] = {
 static const int GAMEPAD_BUTTONS_COUNT = sizeof(GAMEPAD_BUTTONS) / sizeof(GamepadButton);
 
 Gui::Gui() : tracker(nullptr), reader(nullptr), gamepad(nullptr) {
+    LogMessage("Gui constructor: initializing tracker...");
     tracker = new MovementTracker();
+    
+    LogMessage("Gui constructor: initializing virtual gamepad...");
     gamepad = new GamepadOutput();
     gamepad_init_success = gamepad->init();
     
+    LogMessage("Gui constructor: retrieving available COM ports...");
     available_ports = SensorReader::getAvailablePorts();
     if (available_ports.empty()) {
         available_ports.push_back("No ports");
@@ -39,22 +44,32 @@ Gui::Gui() : tracker(nullptr), reader(nullptr), gamepad(nullptr) {
     auto now = std::chrono::steady_clock::now();
     start_time = std::chrono::duration<double>(now.time_since_epoch()).count();
     
+    LogMessage("Gui constructor: loading configuration...");
     loadConfig();
+    LogMessage("Gui constructor successfully finished.");
 }
 
 Gui::~Gui() {
+    LogMessage("Gui destructor started.");
     if (reader) {
+        LogMessage("Gui destructor: stopping and deleting reader...");
         reader->stop();
         delete reader;
+        reader = nullptr;
     }
     if (tracker) {
+        LogMessage("Gui destructor: stopping and deleting tracker...");
         tracker->stop();
         delete tracker;
+        tracker = nullptr;
     }
     if (gamepad) {
+        LogMessage("Gui destructor: stopping gamepad output and deleting...");
         gamepad->stopMoving();
         delete gamepad;
+        gamepad = nullptr;
     }
+    LogMessage("Gui destructor finished.");
 }
 
 void Gui::updateLogic() {
@@ -243,6 +258,11 @@ void Gui::render() {
 
     // Sliders
     ImGui::SliderInt("Trigger Threshold", &threshold_trigger, 5, 1000);
+    ImGui::SliderInt("Sensor Center", &sensor_center, 0, 1023);
+    if (ImGui::Button("Calibrate Center", ImVec2(-1, 22))) {
+        sensor_center = last_analog_val.load();
+    }
+    ImGui::Spacing();
     ImGui::SliderInt("SMA 1 Period (ms)", &sma_period_ms, 10, 3000);
     ImGui::SliderInt("SMA 2 Period (ms)", &sma2_period_ms, 10, 3000);
     ImGui::SliderInt("Maximum Speed", &max_speed_limit, 1, 100);
@@ -516,6 +536,7 @@ void Gui::saveConfig() {
     std::ofstream f("config.txt");
     if (f.is_open()) {
         f << "threshold_trigger=" << threshold_trigger << "\n";
+        f << "sensor_center=" << sensor_center << "\n";
         f << "sma_period_ms=" << sma_period_ms << "\n";
         f << "sma2_period_ms=" << sma2_period_ms << "\n";
         f << "max_speed_limit=" << max_speed_limit << "\n";
@@ -538,6 +559,8 @@ void Gui::loadConfig() {
                 std::string val = line.substr(eq + 1);
                 if (key == "threshold_trigger") {
                     threshold_trigger = std::stoi(val);
+                } else if (key == "sensor_center") {
+                    sensor_center = std::stoi(val);
                 } else if (key == "sma_period_ms") {
                     sma_period_ms = std::stoi(val);
                 } else if (key == "sma2_period_ms") {

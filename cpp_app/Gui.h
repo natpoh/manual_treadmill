@@ -40,7 +40,7 @@ private:
     float stop_timeout = 0.2f;
     int threshold_trigger = 40;
     int threshold_release = 20;
-    int sensor_center = 1023;
+    int sensor_center = 512;
     int sensor_mode = 0; // 0 = Raw, 1 = Pulse Counter
     int sma_period_ms = 3000;
     int sma2_period_ms = 500;
